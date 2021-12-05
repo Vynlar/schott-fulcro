@@ -21,6 +21,16 @@
                          (assoc-in bean-ident (fs/add-form-config bean-form-class bean-entity))
                          (assoc-in [:component/id :bean-page :bean-form] bean-ident)))))))
 
+(defmutation edit-existing-bean [{:bean/keys [id]}]
+  (action [{:keys [state]}]
+          (let [bean-ident [:bean/id id]
+                bean-form-class (comp/registry-key->class :app.ui.beans/BeanForm)]
+            (swap! state
+                   (fn [s]
+                     (-> s
+                         (fs/add-form-config* bean-form-class [:bean/id id])
+                         (assoc-in [:component/id :bean-page :bean-form] bean-ident)))))))
+
 (defmutation abort-bean-edit [_]
   (action [{:keys [state]}]
           (swap! state update-in [:component/id :bean-page] dissoc :bean-form)))

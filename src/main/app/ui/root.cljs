@@ -2,6 +2,7 @@
   (:require
    [app.model.session :as session]
    [app.ui.beans :refer [BeanPage]]
+   [app.ui.brews :refer [BrewPage]]
    [clojure.string :as str]
    [com.fulcrologic.fulcro.dom :as dom :refer [div ul li p h3 button b]]
    [com.fulcrologic.fulcro.dom.html-entities :as ent]
@@ -158,7 +159,7 @@
        (div "TODO")))
 
 (dr/defrouter TopRouter [this props]
-  {:router-targets [Main Signup SignupSuccess Settings BeanPage]}
+  {:router-targets [Main Signup SignupSuccess Settings BeanPage BrewPage]}
   (dom/div "Loading"))
 
 (def ui-top-router (comp/factory TopRouter))
@@ -193,6 +194,8 @@
                              :onClick (fn [] (dr/change-route this ["settings"]))} "Settings")
               (dom/a :.item {:classes [(when (= :beans current-tab) "active")]
                              :onClick (fn [] (dr/change-route this ["beans"]))} "Beans")
+              (dom/a :.item {:classes [(when (= :brews current-tab) "active")]
+                             :onClick (fn [] (dr/change-route this ["brews"]))} "Brews")
               (div :.right.menu
                    (ui-login login)))
          (div :.ui.grid
