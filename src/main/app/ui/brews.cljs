@@ -40,17 +40,18 @@
 
 #_(def ui-bean-select (comp/factory BeanSelect))
 
-(defsc BrewForm [this {:brew/keys [id dose yield duration bean] :bean/keys [options]}]
+(defsc BrewForm [this {:brew/keys [id dose yield duration bean] :ui/keys [bean-options]}]
   {:query [:brew/id
            :brew/dose
            :brew/yield
            :brew/duration
            :brew/bean
-           {[:bean/options '_] (comp/get-query BeanSelectOption)}
+           {:ui/bean-options (comp/get-query BeanSelectOption)}
            fs/form-config-join]
    :ident :brew/id
    :form-fields #{:brew/dose :brew/yield :brew/duration}
-   :componentDidMount (fn [this] (df/load! this :all-beans BeanSelectOption {:target [:bean/options]}))}
+   :componentDidMount (fn [this] (df/load! this :all-beans BeanSelectOption
+                                           {:target [:brew/id (:brew/id (comp/props this)) :ui/bean-options]}))}
   (dom/div
    "brew form"
    (dom/form {:onSubmit (fn [e]
@@ -60,7 +61,7 @@
              (dom/select {:value (or bean "")
                           :onChange #(m/set-value! this :brew/bean (uuid (.. % -target -value)))}
                          (dom/option {:value "" :disabled true} "--")
-                         (map ui-bean-select-option options))
+                         (map ui-bean-select-option bean-options))
 
              (ds/ui-label {:htmlFor "brew-form-dose"} "Dose")
              (ds/ui-float-input
