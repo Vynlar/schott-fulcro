@@ -1,7 +1,9 @@
 (ns app.ui.design-system
   (:require
    [com.fulcrologic.fulcro.mutations :as m]
-   [com.fulcrologic.fulcro.dom :as dom :refer [div ul li p h3 button b]]))
+   [com.fulcrologic.fulcro.dom :as dom :refer [div ul li p h3 button b]]
+   [com.fulcrologic.fulcro.algorithms.form-state :as fs]
+   [com.fulcrologic.fulcro.components :as comp]))
 
 (defn ui-button [params children]
   (dom/button :.bg-blue-500.h-10.px-6.rounded.text-white.font-bold params children))
@@ -22,7 +24,9 @@
   (ui-input
    (merge props
           {:type "decimal"
-           :value (if (nil? value) "" value)
+           :value (if (nil? value) "" (str value))
+           :onBlur #(comp/transact! this [(fs/mark-complete! {:entity-ident (comp/get-ident this)
+                                                              :field name})])
            :onChange (handle-float-event this name)})))
 
 (defn ui-label [params children]

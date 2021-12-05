@@ -12,6 +12,10 @@
 (def schema {:account/id {:db/cardinality :db.cardinality/one
                           :db/unique      :db.unique/identity}
              :bean/id {:db/cardinality :db.cardinality/one
+                       :db/unique      :db.unique/identity}
+             :brew/bean {:db/type :db.type/ref
+                         :db/cardinality :db.cardinality/one}
+             :brew/id {:db/cardinality :db.cardinality/one
                        :db/unique      :db.unique/identity}})
 
 (defn new-database [] (d/create-conn schema))

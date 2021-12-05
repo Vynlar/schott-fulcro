@@ -26,21 +26,9 @@
    :ident :bean/id}
   (dom/option {:value id} name))
 
-(def ui-bean-select-option (comp/factory BeanSelectOption))
+(def ui-bean-select-option (comp/factory BeanSelectOption {:keyfn :bean/id}))
 
-#_(defsc BeanSelect [this {:select/keys [id options] :ui/keys [value]}]
-    {:query [:select/id
-             {:select/options (comp/get-query BeanSelectOption)}
-             :ui/value]
-     :ident :select/id
-     #_#_:initial-state {:select/id :params/id :select/options []}
-     :componentDidMount (fn [this] (df/load! this :all-beans BeanSelectOption {:target [:select/id :all-beans :select/options]}))}
-    (dom/select {:value (or value "")}
-                (map ui-bean-select-option options)))
-
-#_(def ui-bean-select (comp/factory BeanSelect))
-
-(defsc BrewForm [this {:brew/keys [id dose yield duration bean] :ui/keys [bean-options]}]
+(defsc BrewForm [this {:brew/keys [id dose yield duration bean] :ui/keys [bean-options] :as props}]
   {:query [:brew/id
            :brew/dose
            :brew/yield
@@ -49,16 +37,17 @@
            {:ui/bean-options (comp/get-query BeanSelectOption)}
            fs/form-config-join]
    :ident :brew/id
-   :form-fields #{:brew/dose :brew/yield :brew/duration}
+   :form-fields #{:brew/id :brew/dose :brew/yield :brew/duration :brew/bean}
    :componentDidMount (fn [this] (df/load! this :all-beans BeanSelectOption
                                            {:target [:brew/id (:brew/id (comp/props this)) :ui/bean-options]}))}
   (dom/div
    "brew form"
    (dom/form {:onSubmit (fn [e]
                           (.preventDefault e)
-                          (tap> "submitting"))}
+                          (comp/transact! this [(brew/save-brew {:brew/id id
+                                                                 :values (fs/dirty-fields props false)})]))}
 
-             (dom/select {:value (or bean "")
+             (dom/select {:value (str (or bean ""))
                           :onChange #(m/set-value! this :brew/bean (uuid (.. % -target -value)))}
                          (dom/option {:value "" :disabled true} "--")
                          (map ui-bean-select-option bean-options))
@@ -82,17 +71,45 @@
               this
               {:id "brew-form-duration"
                :value duration
-               :name :brew/duration}))))
+               :name :brew/duration})
+
+             (ds/ui-button {:type "submit"} "Save"))))
 
 (def ui-brew-form (comp/factory BrewForm))
 
-(defsc BrewPage [this {:keys [brew-form]}]
-  {:query [{:brew-form (comp/get-query BrewForm)}]
+(defsc BrewListItem [this {:brew/keys [dose yield duration bean]}]
+  {:query [:brew/id :brew/dose :brew/yield :brew/duration {:brew/bean [:bean/id :bean/name]}]
+   :ident :brew/id}
+  (dom/li "Dose: " dose " Yield: " yield " Duration: " duration " Bean: " (:bean/name bean)))
+
+(def ui-brew-list-item (comp/factory BrewListItem {:keyfn :brew/id}))
+
+(defsc BrewList [this {:list/keys [brews]}]
+  {:query [:list/id {:list/brews (comp/get-query BrewListItem)}]
+   :ident :list/id
+   :initial-state {:list/id :param/id
+                   :list/brews []}
+   :componentDidMount
+   (fn [this]
+     (df/load! this :all-brews BrewListItem {:target [:list/id (:list/id (comp/props this)) :list/brews]}))}
+
+  (dom/div
+   (dom/h2 "Brews")
+   (dom/ul
+    (map ui-brew-list-item brews))))
+
+(def ui-brew-list (comp/factory BrewList))
+
+(defsc BrewPage [this {:keys [brew-form brew-list]}]
+  {:query [{:brew-form (comp/get-query BrewForm)}
+           {:brew-list (comp/get-query BrewList)}]
    :ident (fn [] [:component/id :brew-page])
    :route-segment ["brews"]
-   :initial-state {:brew-form {}}}
+   :initial-state {:brew-form {}
+                   :brew-list {:id :all-brews}}}
   (dom/div
    "Brew page"
    (if brew-form
      (ui-brew-form brew-form)
-     (ds/ui-button {:onClick #(comp/transact! this `[(brew/edit-new-brew)])} "New brew"))))
+     (ds/ui-button {:onClick #(comp/transact! this `[(brew/edit-new-brew)])} "New brew"))
+   (ui-brew-list brew-list)))
