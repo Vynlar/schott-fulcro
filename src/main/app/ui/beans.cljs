@@ -21,10 +21,10 @@
    [taoensso.timbre :as log]
    [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]))
 
-(defsc BeanListItem [this {:bean/keys [id name]}]
-  {:query [:bean/id :bean/name]
+(defsc BeanListItem [this {:bean/keys [id name bags]}]
+  {:query [:bean/id :bean/name {:bean/bags [:bag/id :bag/roasted-on]}]
    :ident :bean/id}
-  (div :.bg-gray-100.p-4 name
+  (div :.bg-gray-100.p-4 name (str (:bag/roasted-on (first bags)))
        (ds/ui-button {:onClick #(comp/transact! this `[(bean/edit-existing-bean ~{:bean/id id})])} "Edit")))
 
 (def ui-bean-list-item (comp/factory BeanListItem {:keyfn :bean/id}))

@@ -13,7 +13,12 @@
                           :db/unique      :db.unique/identity}
              :bean/id {:db/cardinality :db.cardinality/one
                        :db/unique      :db.unique/identity}
-             :brew/bean {:db/type :db.type/ref
+             :bean/bags {:db/valueType :db.type/ref
+                         :db/cardinality :db.cardinality/many
+                         :db/isComponent true}
+             :bag/id {:db/cardinality :db.cardinality/one
+                      :db/unique      :db.unique/identity}
+             :brew/bean {:db/valueType :db.type/ref
                          :db/cardinality :db.cardinality/one}
              :brew/id {:db/cardinality :db.cardinality/one
                        :db/unique      :db.unique/identity}})
