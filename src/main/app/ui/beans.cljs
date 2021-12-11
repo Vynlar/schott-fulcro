@@ -29,14 +29,12 @@
 (defn format-date [date]
   (time-format/unparse date-formatter (time-coerce/from-date date)))
 
-(defsc BeanListItem [this {:bean/keys [id name bag-count latest-bag]}]
-  {:query [:bean/id :bean/name :bean/bag-count {:bean/latest-bag [:bag/id :bag/roasted-on]}]
+(defsc BeanListItem [this {:bean/keys [id name latest-bag]}]
+  {:query [:bean/id :bean/name {:bean/latest-bag [:bag/id :bag/roasted-on]}]
    :ident :bean/id}
   (dom/article :.bg-gray-100.p-4
                (dom/h2 :.text-lg.font-bold name)
-               (dom/p (str (:bag/id latest-bag)))
                (dom/p "Roasted on: " (format-date (:bag/roasted-on latest-bag)))
-               (dom/p bag-count)
                (ds/ui-button {:onClick #(comp/transact! this `[(bean/create-bag ~{:bean/id id
                                                                                   :bag/roasted-on (new js/Date)})])} "New Bag")
                (ds/ui-button {:onClick #(comp/transact! this `[(bean/edit-existing-bean ~{:bean/id id})])} "Edit")))
