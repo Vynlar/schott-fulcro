@@ -43,3 +43,8 @@
           (-> env
               (m/returning 'app.ui.beans/BeanListItem)
               (m/with-target (targeting/append-to [:list/id :all-beans :list/beans])))))
+
+(defmutation create-bag [bean]
+  (ok-action [{:keys [app]}]
+             (df/load! app [:bean/id (:bean/id bean)] (comp/registry-key->class :app.ui.beans/BeanListItem)))
+  (remote [_env] true))

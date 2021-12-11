@@ -4,6 +4,9 @@
    [app.model.bean :as bean]
    [app.ui.design-system :as ds]
    [app.application :refer [SPA]]
+   [cljs-time.format :as time-format]
+   [cljs-time.coerce :as time-coerce]
+   [cljs-time.core :as time]
    [clojure.string :as str]
    [com.fulcrologic.fulcro.dom :as dom :refer [div ul li p h3 button b]]
    [com.fulcrologic.fulcro.dom.html-entities :as ent]
@@ -21,11 +24,22 @@
    [taoensso.timbre :as log]
    [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]))
 
-(defsc BeanListItem [this {:bean/keys [id name bags]}]
-  {:query [:bean/id :bean/name {:bean/bags [:bag/id :bag/roasted-on]}]
+(def date-formatter (time-format/formatter "dd MMM yyyy"))
+
+(defn format-date [date]
+  (time-format/unparse date-formatter (time-coerce/from-date date)))
+
+(defsc BeanListItem [this {:bean/keys [id name bag-count latest-bag]}]
+  {:query [:bean/id :bean/name :bean/bag-count {:bean/latest-bag [:bag/id :bag/roasted-on]}]
    :ident :bean/id}
-  (div :.bg-gray-100.p-4 name (str (:bag/roasted-on (first bags)))
-       (ds/ui-button {:onClick #(comp/transact! this `[(bean/edit-existing-bean ~{:bean/id id})])} "Edit")))
+  (dom/article :.bg-gray-100.p-4
+               (dom/h2 :.text-lg.font-bold name)
+               (dom/p (str (:bag/id latest-bag)))
+               (dom/p "Roasted on: " (format-date (:bag/roasted-on latest-bag)))
+               (dom/p bag-count)
+               (ds/ui-button {:onClick #(comp/transact! this `[(bean/create-bag ~{:bean/id id
+                                                                                  :bag/roasted-on (new js/Date)})])} "New Bag")
+               (ds/ui-button {:onClick #(comp/transact! this `[(bean/edit-existing-bean ~{:bean/id id})])} "Edit")))
 
 (def ui-bean-list-item (comp/factory BeanListItem {:keyfn :bean/id}))
 
