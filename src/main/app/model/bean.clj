@@ -1,5 +1,6 @@
 (ns app.model.bean
   (:require
+   [app.model.bean-specs]
    [datascript.core :as d]
    [taoensso.timbre :as log]
    [app.model.mock-database :as db]
@@ -79,10 +80,17 @@
     {:bean/id real-id
      :tempids (if new-bean? {id real-id} {})}))
 
+(s/def ::create-bag-params (s/keys :req [:bean/id
+                                         :bag/roasted-on]))
+
 (defmutation create-bag [{:keys [connection]} {bean-id :bean/id
-                                               :bag/keys [roasted-on]}]
+                                               :bag/keys [roasted-on]
+                                               :as params}]
   {::pc/params [:bean/id :bag/roasted-on]
    ::pc/output [:bag/id :bag/roasted-on]}
+  (when-not (s/valid? ::create-bag-params params)
+    (s/explain ::create-bag-params params)
+    (throw (Exception. (str "Invalid bag"))))
   (let [id (uuid)
         result (d/transact! connection [{:db/id -1
                                          :bag/id id
