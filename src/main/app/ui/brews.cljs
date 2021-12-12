@@ -80,7 +80,9 @@
 (defsc BrewListItem [this {:brew/keys [dose yield duration bean]}]
   {:query [:brew/id :brew/dose :brew/yield :brew/duration {:brew/bean [:bean/id :bean/name]}]
    :ident :brew/id}
-  (dom/li "Dose: " dose " Yield: " yield " Duration: " duration " Bean: " (:bean/name bean)))
+  (dom/li "Dose: " dose " Yield: " yield " Duration: " duration
+          " Bean: " (dom/a {:onClick (fn [] (dr/change-route this ["beans" (:bean/id bean)]))}
+                           (:bean/name bean))))
 
 (def ui-brew-list-item (comp/factory BrewListItem {:keyfn :brew/id}))
 

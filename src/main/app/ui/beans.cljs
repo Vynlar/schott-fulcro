@@ -2,11 +2,9 @@
   (:require
    [app.model.session :as session]
    [app.model.bean :as bean]
+   [app.ui.util.date :refer [format-date]]
    [app.ui.design-system :as ds]
    [app.application :refer [SPA]]
-   [cljs-time.format :as time-format]
-   [cljs-time.coerce :as time-coerce]
-   [cljs-time.core :as time]
    [clojure.string :as str]
    [com.fulcrologic.fulcro.dom :as dom :refer [div ul li p h3 button b]]
    [com.fulcrologic.fulcro.dom.html-entities :as ent]
@@ -24,16 +22,14 @@
    [taoensso.timbre :as log]
    [com.fulcrologic.fulcro.algorithms.data-targeting :as targeting]))
 
-(def date-formatter (time-format/formatter "dd MMM yyyy"))
-
-(defn format-date [date]
-  (time-format/unparse date-formatter (time-coerce/from-date date)))
+(declare BeanDetails)
 
 (defsc BeanListItem [this {:bean/keys [id name latest-bag]}]
   {:query [:bean/id :bean/name {:bean/latest-bag [:bag/id :bag/roasted-on]}]
    :ident :bean/id}
   (dom/article :.bg-gray-100.p-4
-               (dom/h2 :.text-lg.font-bold name)
+               (dom/a {:onClick #(dr/change-route! this (dr/path-to BeanDetails id))}
+                      (dom/h2 :.text-lg.font-bold name))
                (dom/p "Roasted on: " (format-date (:bag/roasted-on latest-bag)))
                (ds/ui-button {:onClick #(comp/transact! this `[(bean/create-bag ~{:bean/id id
                                                                                   :bag/roasted-on (new js/Date)})])} "New Bag")
@@ -87,6 +83,28 @@
          (ds/ui-button {:onClick #(comp/transact! this [`(bean/edit-new-bean)])}
                        "Add Bean"))
        (ui-bean-list (:bean-list props))))
+
+(defsc BagDetails [this {:bag/keys [id roasted-on]}]
+  {:query [:bag/id :bag/roasted-on]
+   :ident :bag/id}
+  (dom/p (str id) ": " (format-date roasted-on)))
+
+(def ui-bag-details (comp/factory BagDetails {:keyfn :bag/id}))
+
+(defsc BeanDetails [this {:bean/keys [name bags]}]
+  {:query [:bean/id :bean/name {:bean/bags (comp/get-query BagDetails)}]
+   :ident :bean/id
+   :route-segment ["beans" :bean-id]
+   :will-enter (fn [app {:keys [bean-id]}]
+                 (let [bean-ident [:bean/id (uuid bean-id)]]
+                   (dr/route-deferred bean-ident
+                                      #(df/load! app bean-ident BeanDetails
+                                                 {:post-mutation `dr/target-ready
+                                                  :post-mutation-params {:target bean-ident}
+                                                  #_#_:target [:list/id :all-beans :list/beans]}))))}
+  (dom/div
+   (dom/h2 name)
+   (map ui-bag-details bags)))
 
 (comment
   (merge/merge-component! SPA BeanPage [{:bean/id "1" :bean/name "jet1"}] :replace [:component/id :bean-list :list/beans])

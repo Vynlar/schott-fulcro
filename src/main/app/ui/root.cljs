@@ -1,7 +1,7 @@
 (ns app.ui.root
   (:require
    [app.model.session :as session]
-   [app.ui.beans :refer [BeanPage]]
+   [app.ui.beans :refer [BeanPage BeanDetails]]
    [app.ui.brews :refer [BrewPage]]
    [clojure.string :as str]
    [com.fulcrologic.fulcro.dom :as dom :refer [div ul li p h3 button b]]
@@ -159,7 +159,7 @@
        (div "TODO")))
 
 (dr/defrouter TopRouter [this props]
-  {:router-targets [Main Signup SignupSuccess Settings BeanPage BrewPage]}
+  {:router-targets [Main Signup SignupSuccess Settings BeanPage BeanDetails BrewPage]}
   (dom/div "Loading"))
 
 (def ui-top-router (comp/factory TopRouter))
