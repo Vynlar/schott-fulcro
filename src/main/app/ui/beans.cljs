@@ -87,6 +87,7 @@
 (defsc BagDetails [this {:bag/keys [id roasted-on]}]
   {:query [:bag/id :bag/roasted-on]
    :ident :bag/id}
+  (js/console.log roasted-on)
   (dom/p (str id) ": " (format-date roasted-on)))
 
 (def ui-bag-details (comp/factory BagDetails {:keyfn :bag/id}))

@@ -69,13 +69,13 @@
    ::pc/output [:bean/id]}
   (let [new-bean? (tempid/tempid? id)
         real-id (if new-bean? (uuid) id)
-        bag-tx {:db/id -1
-                :bag/id (uuid)
-                :bag/roasted-on (new java.util.Date)}
-        bean-tx (-> params
-                    (assoc :bean/id real-id)
-                    (assoc :bean/bags [-1]))]
-    (d/transact! connection [(when new-bean? bag-tx) bean-tx])
+        bag-txs [{:db/id -1
+                  :bag/id (uuid)
+                  :bag/roasted-on (new java.util.Date)}
+                 {:bean/id real-id
+                  :bean/bags [-1]}]
+        bean-txs [(assoc params :bean/id real-id)]]
+    (d/transact! connection (into [] (concat bean-txs (when new-bean? bag-txs))))
     {:bean/id real-id
      :tempids (if new-bean? {id real-id} {})}))
 
