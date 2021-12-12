@@ -25,25 +25,28 @@
    ::pc/output [:bean/name {:bean/bags [:bag/id]}]}
   (d/pull @connection [:bean/name :bean/bags] [:bean/id id]))
 
+(defn get-latest-bag [db bean-id]
+  (->>
+   (d/q '[:find (max ?rd) .
+          :in $ ?beanid
+          :where
+          [?bean :bean/id ?beanid]
+          [?bean :bean/bags ?bag]
+          [?bag :bag/roasted-on ?rd]]
+        db bean-id)
+   (d/q '[:find ?bagid .
+          :in $ ?rd
+          :where
+          [?bag :bag/roasted-on ?rd]
+          [?bag :bag/id ?bagid]]
+        db)))
+
 (defresolver latest-bag-resolver [{:keys [connection]} {:bean/keys [id]}]
   {::pc/input #{:bean/id}
    ::pc/output [{:bean/latest-bag [:bag/id]}]}
   {:bean/latest-bag
    {:bag/id
-    (->>
-     (d/q '[:find (max ?rd) .
-            :in $ ?beanid
-            :where
-            [?bean :bean/id ?beanid]
-            [?bean :bean/bags ?bag]
-            [?bag :bag/roasted-on ?rd]]
-          @connection id)
-     (d/q '[:find ?bagid .
-            :in $ ?rd
-            :where
-            [?bag :bag/roasted-on ?rd]
-            [?bag :bag/id ?bagid]]
-          @connection))}})
+    (get-latest-bag @connection id)}})
 
 (defresolver bag-count-resolver [{:keys [connection]} {:bean/keys [id]}]
   {::pc/input #{:bean/id}

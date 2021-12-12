@@ -18,8 +18,8 @@
                          :db/isComponent true}
              :bag/id {:db/cardinality :db.cardinality/one
                       :db/unique      :db.unique/identity}
-             :brew/bean {:db/valueType :db.type/ref
-                         :db/cardinality :db.cardinality/one}
+             :brew/bag {:db/valueType :db.type/ref
+                        :db/cardinality :db.cardinality/one}
              :brew/id {:db/cardinality :db.cardinality/one
                        :db/unique      :db.unique/identity}})
 
